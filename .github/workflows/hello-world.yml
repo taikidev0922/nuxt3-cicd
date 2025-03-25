@@ -1,0 +1,24 @@
+name: Hello World Workflow
+
+on:
+  # 手動で実行可能
+  workflow_dispatch:
+  # プッシュ時に実行
+  push:
+    branches: [main]
+  # プルリクエスト時に実行
+  pull_request:
+    branches: [main]
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello World
+        run: echo "Hello World from GitHub Actions!"
+
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: List files in the repository
+        run: ls -la
