@@ -1,0 +1,375 @@
+openapi: 3.0.0
+info:
+  title: 受発注システム API
+  description: 商品マスタ、得意先マスタ、受注、受注明細に関するAPI
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: 本番環境
+  - url: https://dev-api.example.com/v1
+    description: 開発環境
+
+paths:
+  /products:
+    get:
+      summary: 商品マスタ一覧の取得
+      description: 商品マスタの一覧を取得します
+      parameters:
+        - name: limit
+          in: query
+          description: 1ページあたりの最大件数
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: 取得開始位置
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: 総件数
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+
+  /products/{productId}:
+    get:
+      summary: 商品マスタの取得
+      description: 指定したIDの商品マスタを取得します
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: 商品ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: 商品が見つかりません
+
+  /customers:
+    get:
+      summary: 得意先マスタ一覧の取得
+      description: 得意先マスタの一覧を取得します
+      parameters:
+        - name: limit
+          in: query
+          description: 1ページあたりの最大件数
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: 取得開始位置
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: 総件数
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Customer"
+
+  /customers/{customerId}:
+    get:
+      summary: 得意先マスタの取得
+      description: 指定したIDの得意先マスタを取得します
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: 得意先ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        "404":
+          description: 得意先が見つかりません
+
+  /orders:
+    get:
+      summary: 受注一覧の取得
+      description: 受注一覧を取得します
+      parameters:
+        - name: customerId
+          in: query
+          description: 得意先IDによるフィルタリング
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: 受注日（開始）
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: 受注日（終了）
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          description: 1ページあたりの最大件数
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: 取得開始位置
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    description: 総件数
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+
+    post:
+      summary: 受注の登録
+      description: 新規受注を登録します
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: 入力エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /orders/{orderId}:
+    get:
+      summary: 受注の取得
+      description: 指定したIDの受注を詳細情報（受注明細を含む）を取得します
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: 受注ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderWithDetails"
+        "404":
+          description: 受注が見つかりません
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - productId
+        - productName
+        - unitPrice
+      properties:
+        productId:
+          type: string
+          description: 商品ID
+        productName:
+          type: string
+          description: 商品名
+        unitPrice:
+          type: number
+          format: float
+          description: 単価
+
+    Customer:
+      type: object
+      required:
+        - customerId
+        - customerName
+      properties:
+        customerId:
+          type: string
+          description: 得意先ID
+        customerName:
+          type: string
+          description: 得意先名
+        address:
+          type: string
+          description: 住所
+
+    Order:
+      type: object
+      required:
+        - orderId
+        - customerId
+        - orderDate
+        - totalAmount
+      properties:
+        orderId:
+          type: string
+          description: 受注ID
+        customerId:
+          type: string
+          description: 得意先ID
+        customerName:
+          type: string
+          description: 得意先名
+        orderDate:
+          type: string
+          format: date
+          description: 受注日
+        totalAmount:
+          type: number
+          format: float
+          description: 合計金額
+
+    OrderInput:
+      type: object
+      required:
+        - customerId
+        - orderDate
+        - orderDetails
+      properties:
+        customerId:
+          type: string
+          description: 得意先ID
+        orderDate:
+          type: string
+          format: date
+          description: 受注日
+        orderDetails:
+          type: array
+          description: 受注明細
+          items:
+            $ref: "#/components/schemas/OrderDetailInput"
+
+    OrderDetail:
+      type: object
+      required:
+        - orderDetailId
+        - orderId
+        - productId
+        - quantity
+        - unitPrice
+        - amount
+      properties:
+        orderDetailId:
+          type: string
+          description: 受注明細ID
+        orderId:
+          type: string
+          description: 受注ID
+        productId:
+          type: string
+          description: 商品ID
+        productName:
+          type: string
+          description: 商品名
+        quantity:
+          type: integer
+          description: 数量
+        unitPrice:
+          type: number
+          format: float
+          description: 単価
+        amount:
+          type: number
+          format: float
+          description: 金額（数量×単価）
+
+    OrderDetailInput:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          description: 商品ID
+        quantity:
+          type: integer
+          description: 数量
+
+    OrderWithDetails:
+      allOf:
+        - $ref: "#/components/schemas/Order"
+        - type: object
+          properties:
+            orderDetails:
+              type: array
+              description: 受注明細一覧
+              items:
+                $ref: "#/components/schemas/OrderDetail"
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: エラーコード
+        message:
+          type: string
+          description: エラーメッセージ
+        details:
+          type: array
+          description: 詳細エラー情報
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: エラーが発生したフィールド
+              message:
+                type: string
+                description: フィールドに対するエラーメッセージ
